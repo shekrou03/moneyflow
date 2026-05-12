@@ -66,7 +66,7 @@ function daysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(
 
 function PieChart({ data, size = 120 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return <div style={{ width: size, height: size, borderRadius: "50%", background: "#f1f5f9" }} />;
+  if (total === 0) return <div style={{ width: size, height: size, borderRadius: "50%", background: "#f8fafc" }} />;
   let cum = 0;
   const slices = data.map(d => { const pct = d.value / total; const start = cum; cum += pct; return { ...d, pct, start }; });
   const r = 50, cx = 60, cy = 60;
