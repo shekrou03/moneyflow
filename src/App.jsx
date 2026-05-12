@@ -67,7 +67,7 @@ function daysInMonth(year, month) { return new Date(year, month + 1, 0).getDate(
 
 function PieChart({ data, size = 120 }) {
   const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return <div style={{ width: size, height: size, borderRadius: "50%", background: "#1e293b" }} />;
+  if (total === 0) return <div style={{ width: size, height: size, borderRadius: "50%", background: "#f1f5f9" }} />;
   let cum = 0;
   const slices = data.map(d => { const pct = d.value / total; const start = cum; cum += pct; return { ...d, pct, start }; });
   const r = 50, cx = 60, cy = 60;
@@ -78,9 +78,9 @@ function PieChart({ data, size = 120 }) {
         if (s.pct === 0) return null;
         if (s.pct >= 0.999) return <circle key={i} cx={cx} cy={cy} r={r} fill={s.color} />;
         const [x1, y1] = p2c(s.start); const [x2, y2] = p2c(s.start + s.pct);
-        return <path key={i} d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${s.pct > 0.5 ? 1 : 0},1 ${x2},${y2} Z`} fill={s.color} stroke="#0f172a" strokeWidth="1.5" />;
+        return <path key={i} d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${s.pct > 0.5 ? 1 : 0},1 ${x2},${y2} Z`} fill={s.color} stroke="#fff" strokeWidth="2" />;
       })}
-      <circle cx={cx} cy={cy} r={32} fill="#0f172a" />
+      <circle cx={cx} cy={cy} r={32} fill="#fff" />
     </svg>
   );
 }
@@ -95,7 +95,7 @@ function BarChart({ data, height = 80 }) {
             {d.income > 0 && <div style={{ flex: 1, background: "#22c55e", borderRadius: "3px 3px 0 0", height: `${(d.income / max) * 100}%`, minHeight: 2 }} />}
             {d.expense > 0 && <div style={{ flex: 1, background: "#f97316", borderRadius: "3px 3px 0 0", height: `${(d.expense / max) * 100}%`, minHeight: 2 }} />}
           </div>
-          <span style={{ fontSize: 9, color: "#64748b", whiteSpace: "nowrap" }}>{d.label}</span>
+          <span style={{ fontSize: 9, color: "#94a3b8", whiteSpace: "nowrap" }}>{d.label}</span>
         </div>
       ))}
     </div>
@@ -104,7 +104,7 @@ function BarChart({ data, height = 80 }) {
 
 export default function App() {
   const [tab, setTab] = useState("dashboard");
-  const [transactions, setTransactions] = useState(SAMPLE_DATA);
+  const [transactions, setTransactions] = useState([]);
   const [rates, setRates] = useState(FALLBACK_RATES);
   const [ratesUpdated, setRatesUpdated] = useState(null);
   const [rateSource, setRateSource] = useState("离线");
@@ -156,14 +156,12 @@ export default function App() {
 
   const toBase = useCallback((amount, currency) => {
     if (currency === baseCurrency) return amount;
-    const rate = rates[currency] || FALLBACK_RATES[currency] || 1;
-    return amount / rate;
+    return amount / (rates[currency] || FALLBACK_RATES[currency] || 1);
   }, [rates, baseCurrency]);
 
   const fromBase = useCallback((amount, currency) => {
     if (currency === baseCurrency) return amount;
-    const rate = rates[currency] || FALLBACK_RATES[currency] || 1;
-    return amount * rate;
+    return amount * (rates[currency] || FALLBACK_RATES[currency] || 1);
   }, [rates, baseCurrency]);
 
   const stats = useMemo(() => {
@@ -218,7 +216,6 @@ export default function App() {
 
   const deleteTx = id => { setTransactions(ts => ts.filter(t => t.id !== id)); showToast("已删除"); };
   const openEdit = tx => { setEditTx(tx); setForm({ amount: String(tx.amount), currency: tx.currency, category: tx.category, account: tx.account, date: tx.date, note: tx.note, type: tx.type }); setShowAddModal(true); };
-
   const openAddRecurring = () => { setEditRecurring(null); setRecurringForm({ label: "", amount: "", currency: "SGD", category: "utilities", account: "debit", day: 1 }); setShowRecurringModal(true); };
   const openEditRecurring = r => { setEditRecurring(r); setRecurringForm({ label: r.label, amount: String(r.amount), currency: r.currency, category: r.category, account: r.account, day: r.day }); setShowRecurringModal(true); };
   const saveRecurring = () => {
@@ -239,95 +236,113 @@ export default function App() {
 
   const fmtBase = n => fmt(n, baseCurrency);
 
+  // ── Light theme styles ──────────────────────────────────────────────────────
   const S = {
-    app: { fontFamily: "'DM Sans', 'Noto Sans SC', sans-serif", background: "#0a0f1e", minHeight: "100vh", color: "#e2e8f0", maxWidth: 420, margin: "0 auto" },
-    header: { background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)", padding: "20px 20px 0", borderBottom: "1px solid #1e293b" },
+    app: { fontFamily: "'DM Sans', 'Noto Sans SC', sans-serif", background: "#f8fafc", minHeight: "100vh", color: "#1e293b", maxWidth: 420, margin: "0 auto" },
+    header: { background: "#fff", padding: "20px 20px 0", borderBottom: "1px solid #e2e8f0", boxShadow: "0 1px 3px #0000000a" },
     headerTop: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-    logo: { fontSize: 18, fontWeight: 700, background: "linear-gradient(90deg, #818cf8, #34d399)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" },
-    tab: a => ({ flex: 1, padding: "10px 0", textAlign: "center", fontSize: 11, fontWeight: 600, cursor: "pointer", color: a ? "#818cf8" : "#475569", background: "none", border: "none", borderBottom: a ? "2px solid #818cf8" : "2px solid transparent", letterSpacing: "0.5px" }),
-    card: { background: "#0f1629", borderRadius: 16, padding: 16, border: "1px solid #1e293b" },
-    statCard: { background: "linear-gradient(135deg, #1e1b4b, #0f172a)", borderRadius: 16, padding: 16, border: "1px solid #2d1b69" },
+    logo: { fontSize: 18, fontWeight: 700, color: "#6366f1" },
+    tab: a => ({ flex: 1, padding: "10px 0", textAlign: "center", fontSize: 11, fontWeight: 600, cursor: "pointer", color: a ? "#6366f1" : "#94a3b8", background: "none", border: "none", borderBottom: a ? "2px solid #6366f1" : "2px solid transparent", letterSpacing: "0.3px" }),
+    card: { background: "#fff", borderRadius: 14, padding: 16, border: "1px solid #e2e8f0", boxShadow: "0 1px 4px #0000000a" },
+    heroCard: { background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)", borderRadius: 20, padding: 20, color: "#fff" },
     section: { padding: "16px 16px 0" },
-    label: { fontSize: 11, color: "#475569", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 },
-    sm: { fontSize: 12, color: "#64748b" },
-    pill: color => ({ background: color + "22", color, borderRadius: 20, padding: "2px 8px", fontSize: 10, fontWeight: 600 }),
-    iconBox: color => ({ width: 36, height: 36, borderRadius: 10, background: color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }),
-    input: { width: "100%", background: "#1e293b", border: "1px solid #334155", borderRadius: 10, padding: "10px 12px", color: "#e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" },
-    select: { width: "100%", background: "#1e293b", border: "1px solid #334155", borderRadius: 10, padding: "10px 12px", color: "#e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" },
-    btn: (color = "#818cf8") => ({ background: color, color: "#fff", border: "none", borderRadius: 10, padding: "12px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%" }),
-    modal: { position: "fixed", inset: 0, background: "#000b", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" },
-    modalContent: { background: "#0f1629", borderRadius: "20px 20px 0 0", padding: 20, width: "100%", maxWidth: 420, maxHeight: "90vh", overflowY: "auto", border: "1px solid #1e293b" },
-    toast: type => ({ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: type === "error" ? "#ef4444" : type === "warn" ? "#f59e0b" : "#22c55e", color: "#fff", padding: "8px 18px", borderRadius: 12, fontSize: 13, fontWeight: 600, zIndex: 200, whiteSpace: "nowrap" }),
+    label: { fontSize: 11, color: "#94a3b8", fontWeight: 600, letterSpacing: "0.8px", textTransform: "uppercase", marginBottom: 8 },
+    sm: { fontSize: 12, color: "#94a3b8" },
+    pill: color => ({ background: color + "18", color, borderRadius: 20, padding: "2px 8px", fontSize: 10, fontWeight: 600 }),
+    iconBox: color => ({ width: 38, height: 38, borderRadius: 12, background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }),
+    input: { width: "100%", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: "10px 12px", color: "#1e293b", fontSize: 14, outline: "none", boxSizing: "border-box" },
+    select: { width: "100%", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: "10px 12px", color: "#1e293b", fontSize: 14, outline: "none", boxSizing: "border-box" },
+    btn: (color = "#6366f1") => ({ background: color, color: "#fff", border: "none", borderRadius: 12, padding: "13px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer", width: "100%" }),
+    modal: { position: "fixed", inset: 0, background: "#0006", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" },
+    modalContent: { background: "#fff", borderRadius: "24px 24px 0 0", padding: 24, width: "100%", maxWidth: 420, maxHeight: "92vh", overflowY: "auto" },
+    toast: type => ({ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: type === "error" ? "#ef4444" : type === "warn" ? "#f59e0b" : "#22c55e", color: "#fff", padding: "9px 20px", borderRadius: 12, fontSize: 13, fontWeight: 600, zIndex: 200, whiteSpace: "nowrap", boxShadow: "0 4px 20px #0003" }),
   };
 
+  // ── Dashboard ───────────────────────────────────────────────────────────────
   const Dashboard = () => (
     <div style={{ paddingBottom: 100 }}>
+      {/* Hero balance card */}
       <div style={{ ...S.section, paddingBottom: 16 }}>
-        <div style={{ ...S.statCard, textAlign: "center" }}>
-          <div style={{ ...S.label, marginBottom: 4 }}>本月净收支</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: stats.balance >= 0 ? "#34d399" : "#f87171" }}>{fmtBase(stats.balance)}</div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 12 }}>
-            <div><div style={S.sm}>收入</div><div style={{ color: "#34d399", fontWeight: 700, fontSize: 16 }}>{fmtBase(stats.income)}</div></div>
-            <div style={{ width: 1, background: "#1e293b" }} />
-            <div><div style={S.sm}>支出</div><div style={{ color: "#f97316", fontWeight: 700, fontSize: 16 }}>{fmtBase(stats.expense)}</div></div>
+        <div style={S.heroCard}>
+          <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4, letterSpacing: "0.5px" }}>本月净收支</div>
+          <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-1px", marginBottom: 12 }}>
+            {stats.balance >= 0 ? "+" : ""}{fmtBase(stats.balance)}
           </div>
-          <div style={{ ...S.sm, marginTop: 10, color: ratesUpdated ? "#34d399" : "#f59e0b" }}>
+          <div style={{ display: "flex", gap: 0, background: "#ffffff22", borderRadius: 12, overflow: "hidden" }}>
+            <div style={{ flex: 1, padding: "10px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, opacity: 0.8 }}>收入</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginTop: 2 }}>{fmtBase(stats.income)}</div>
+            </div>
+            <div style={{ width: 1, background: "#ffffff33" }} />
+            <div style={{ flex: 1, padding: "10px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, opacity: 0.8 }}>支出</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginTop: 2 }}>{fmtBase(stats.expense)}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.7, marginTop: 10, textAlign: "center" }}>
             {ratesUpdated ? `✅ 汇率已更新 ${ratesUpdated.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })} · ${rateSource}` : "⏳ 正在获取实时汇率..."}
           </div>
         </div>
       </div>
 
+      {/* Quick rates */}
       <div style={{ ...S.section, paddingBottom: 16 }}>
-        <div style={S.label}>快速汇率（1 {baseCurrency} =）</div>
-        <div style={{ ...S.card, display: "flex", gap: 8 }}>
-          {["MYR", "USD", "CNY", "JPY"].map(code => {
+        <div style={S.label}>实时汇率 （1 {baseCurrency} =）</div>
+        <div style={{ ...S.card, display: "flex", gap: 0 }}>
+          {["MYR", "USD", "CNY", "JPY"].map((code, i) => {
             const cur = getCur(code);
             return (
-              <div key={code} style={{ flex: 1, textAlign: "center" }}>
-                <div>{cur.flag}</div>
-                <div style={{ fontSize: 11, color: "#64748b" }}>{code}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#818cf8" }}>{fromBase(1, code).toFixed(2)}</div>
+              <div key={code} style={{ flex: 1, textAlign: "center", padding: "8px 4px", borderRight: i < 3 ? "1px solid #f1f5f9" : "none" }}>
+                <div style={{ fontSize: 18 }}>{cur.flag}</div>
+                <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>{code}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#6366f1", marginTop: 2 }}>{fromBase(1, code).toFixed(2)}</div>
               </div>
             );
           })}
         </div>
       </div>
 
+      {/* Category breakdown */}
       <div style={{ ...S.section, paddingBottom: 16 }}>
         <div style={S.label}>本月支出分类</div>
         <div style={S.card}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <PieChart data={stats.byCategory} size={110} />
-            <div style={{ flex: 1 }}>
-              {stats.byCategory.slice(0, 5).map(cat => (
-                <div key={cat.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: 2, background: cat.color }} />
-                    <span style={{ fontSize: 12 }}>{cat.icon} {cat.label}</span>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700 }}>{fmtBase(cat.value)}</span>
+          {stats.byCategory.length === 0
+            ? <div style={{ textAlign: "center", color: "#94a3b8", padding: "20px 0", fontSize: 13 }}>本月暂无支出记录</div>
+            : <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <PieChart data={stats.byCategory} size={110} />
+                <div style={{ flex: 1 }}>
+                  {stats.byCategory.slice(0, 5).map(cat => (
+                    <div key={cat.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: 2, background: cat.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: 12, color: "#475569" }}>{cat.icon} {cat.label}</span>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>{fmtBase(cat.value)}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+          }
         </div>
       </div>
 
+      {/* Bar chart */}
       <div style={{ ...S.section, paddingBottom: 16 }}>
         <div style={S.label}>近6个月趋势</div>
         <div style={S.card}>
           <BarChart data={stats.monthlyData} height={90} />
-          <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 16, marginTop: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}><div style={{ width: 8, height: 8, background: "#22c55e", borderRadius: 2 }} /><span style={S.sm}>收入</span></div>
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}><div style={{ width: 8, height: 8, background: "#f97316", borderRadius: 2 }} /><span style={S.sm}>支出</span></div>
           </div>
         </div>
       </div>
 
+      {/* Budget */}
       <div style={{ ...S.section, paddingBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div style={S.label}>预算状态</div>
-          <button onClick={() => setShowBudgetModal(true)} style={{ background: "none", border: "none", color: "#818cf8", fontSize: 12, cursor: "pointer" }}>设置</button>
+          <button onClick={() => setShowBudgetModal(true)} style={{ background: "none", border: "none", color: "#6366f1", fontSize: 12, cursor: "pointer", fontWeight: 600 }}>设置</button>
         </div>
         {CATEGORIES.filter(c => budgets[c.id]).map(cat => {
           const spent = stats.byCategory.find(b => b.id === cat.id)?.value || 0;
@@ -335,31 +350,34 @@ export default function App() {
           return (
             <div key={cat.id} style={{ ...S.card, marginBottom: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 13 }}>{cat.icon} {cat.label}</span>
-                <span style={{ fontSize: 12, color: over ? "#f87171" : "#64748b" }}>{fmtBase(spent)} / {fmtBase(budget)}{over && " ⚠️"}</span>
+                <span style={{ fontSize: 13, color: "#334155" }}>{cat.icon} {cat.label}</span>
+                <span style={{ fontSize: 12, color: over ? "#ef4444" : "#94a3b8", fontWeight: over ? 600 : 400 }}>{fmtBase(spent)} / {fmtBase(budget)}{over && " ⚠️"}</span>
               </div>
-              <div style={{ height: 6, background: "#1e293b", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: over ? "#ef4444" : pct > 80 ? "#f59e0b" : "#34d399", borderRadius: 3 }} />
+              <div style={{ height: 6, background: "#f1f5f9", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: over ? "#ef4444" : pct > 80 ? "#f59e0b" : "#22c55e", borderRadius: 3, transition: "width 0.4s" }} />
               </div>
             </div>
           );
         })}
       </div>
 
+      {/* Recent */}
       <div style={{ ...S.section, paddingBottom: 16 }}>
         <div style={S.label}>最近记录</div>
         <div style={S.card}>
-          {transactions.slice(0, 5).map(tx => {
+          {transactions.slice(0, 5).map((tx, i) => {
             const cat = getCat(tx.category);
             return (
-              <div key={tx.id} onClick={() => openEdit(tx)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: "1px solid #1e293b22", cursor: "pointer" }}>
+              <div key={tx.id} onClick={() => openEdit(tx)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 4 ? "1px solid #f1f5f9" : "none", cursor: "pointer" }}>
                 <div style={S.iconBox(cat.color)}>{cat.icon}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.note || cat.label}</div>
-                  <div style={S.sm}>{tx.date} · {getAcc(tx.account).icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.note || cat.label}</div>
+                  <div style={{ ...S.sm, marginTop: 2 }}>{tx.date} · {getAcc(tx.account).icon}</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: tx.type === "income" ? "#34d399" : "#f97316" }}>{tx.type === "income" ? "+" : "-"}{fmt(tx.amount, tx.currency)}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: tx.type === "income" ? "#16a34a" : "#dc2626" }}>
+                    {tx.type === "income" ? "+" : "-"}{fmt(tx.amount, tx.currency)}
+                  </div>
                   {tx.currency !== baseCurrency && <div style={S.sm}>≈ {fmtBase(toBase(tx.amount, tx.currency))}</div>}
                 </div>
               </div>
@@ -370,45 +388,48 @@ export default function App() {
     </div>
   );
 
+  // ── Records ─────────────────────────────────────────────────────────────────
   const Records = () => (
     <div style={{ paddingBottom: 100 }}>
       <div style={{ padding: "12px 16px", display: "flex", gap: 8, flexDirection: "column" }}>
         <input style={S.input} placeholder="🔍 搜索备注或分类..." value={searchQ} onChange={e => setSearchQ(e.target.value)} />
         <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
           {[{ id: "all", icon: "📋", label: "全部" }, ...CATEGORIES].map(c => (
-            <button key={c.id} onClick={() => setFilterCat(c.id)} style={{ background: filterCat === c.id ? "#818cf822" : "#1e293b", border: filterCat === c.id ? "1px solid #818cf8" : "1px solid transparent", borderRadius: 20, padding: "4px 10px", cursor: "pointer", color: filterCat === c.id ? "#818cf8" : "#64748b", fontSize: 11, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}>
+            <button key={c.id} onClick={() => setFilterCat(c.id)} style={{ background: filterCat === c.id ? "#6366f1" : "#fff", border: "1.5px solid", borderColor: filterCat === c.id ? "#6366f1" : "#e2e8f0", borderRadius: 20, padding: "4px 12px", cursor: "pointer", color: filterCat === c.id ? "#fff" : "#64748b", fontSize: 11, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}>
               {c.icon} {c.label}
             </button>
           ))}
         </div>
         <div style={{ display: "flex", gap: 6, overflowX: "auto" }}>
           {[{ id: "all", icon: "💼", label: "全部" }, ...ACCOUNTS].map(a => (
-            <button key={a.id} onClick={() => setFilterAcc(a.id)} style={{ background: filterAcc === a.id ? "#34d39922" : "#1e293b", border: filterAcc === a.id ? "1px solid #34d399" : "1px solid transparent", borderRadius: 20, padding: "4px 10px", cursor: "pointer", color: filterAcc === a.id ? "#34d399" : "#64748b", fontSize: 11, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}>
+            <button key={a.id} onClick={() => setFilterAcc(a.id)} style={{ background: filterAcc === a.id ? "#0ea5e9" : "#fff", border: "1.5px solid", borderColor: filterAcc === a.id ? "#0ea5e9" : "#e2e8f0", borderRadius: 20, padding: "4px 12px", cursor: "pointer", color: filterAcc === a.id ? "#fff" : "#64748b", fontSize: 11, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}>
               {a.icon} {a.label}
             </button>
           ))}
         </div>
       </div>
       <div style={{ padding: "0 16px" }}>
-        {filteredTx.length === 0 && <div style={{ textAlign: "center", color: "#475569", padding: 40 }}>没有找到记录</div>}
+        {filteredTx.length === 0 && <div style={{ textAlign: "center", color: "#94a3b8", padding: 40 }}>没有找到记录</div>}
         {filteredTx.map(tx => {
           const cat = getCat(tx.category);
           return (
-            <div key={tx.id} style={{ ...S.card, marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
+            <div key={tx.id} style={{ ...S.card, marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
               <div style={S.iconBox(cat.color)}>{cat.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.note || cat.label}</div>
-                <div style={{ display: "flex", gap: 6, marginTop: 3, alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tx.note || cat.label}</div>
+                <div style={{ display: "flex", gap: 6, marginTop: 4, alignItems: "center" }}>
                   <span style={S.sm}>{tx.date}</span>
-                  <span style={S.pill(cat.color)}>{cat.icon} {cat.label}</span>
+                  <span style={S.pill(cat.color)}>{cat.label}</span>
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: tx.type === "income" ? "#34d399" : "#f97316" }}>{tx.type === "income" ? "+" : "-"}{fmt(tx.amount, tx.currency)}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: tx.type === "income" ? "#16a34a" : "#dc2626" }}>
+                  {tx.type === "income" ? "+" : "-"}{fmt(tx.amount, tx.currency)}
+                </div>
                 {tx.currency !== baseCurrency && <div style={S.sm}>≈ {fmtBase(toBase(tx.amount, tx.currency))}</div>}
-                <div style={{ display: "flex", gap: 4, marginTop: 4, justifyContent: "flex-end" }}>
-                  <button onClick={() => openEdit(tx)} style={{ background: "#1e293b", border: "none", color: "#818cf8", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11 }}>编辑</button>
-                  <button onClick={() => deleteTx(tx.id)} style={{ background: "#1e293b", border: "none", color: "#f87171", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11 }}>删除</button>
+                <div style={{ display: "flex", gap: 4, marginTop: 6, justifyContent: "flex-end" }}>
+                  <button onClick={() => openEdit(tx)} style={{ background: "#f1f5f9", border: "none", color: "#6366f1", borderRadius: 6, padding: "3px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>编辑</button>
+                  <button onClick={() => deleteTx(tx.id)} style={{ background: "#fef2f2", border: "none", color: "#ef4444", borderRadius: 6, padding: "3px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>删除</button>
                 </div>
               </div>
             </div>
@@ -418,6 +439,7 @@ export default function App() {
     </div>
   );
 
+  // ── Calendar ────────────────────────────────────────────────────────────────
   const Calendar = () => {
     const { days, firstDay, txByDay } = calData;
     const { year, month } = calMonth;
@@ -426,22 +448,26 @@ export default function App() {
     return (
       <div style={{ paddingBottom: 100 }}>
         <div style={{ padding: "12px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <button onClick={() => setCalMonth(m => { const d = new Date(m.year, m.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })} style={{ background: "#1e293b", border: "none", color: "#e2e8f0", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}>◀</button>
-            <span style={{ fontWeight: 700, fontSize: 16 }}>{year}年 {monthNames[month]}</span>
-            <button onClick={() => setCalMonth(m => { const d = new Date(m.year, m.month + 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })} style={{ background: "#1e293b", border: "none", color: "#e2e8f0", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}>▶</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <button onClick={() => setCalMonth(m => { const d = new Date(m.year, m.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })} style={{ background: "#f1f5f9", border: "none", color: "#475569", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600 }}>◀</button>
+            <span style={{ fontWeight: 700, fontSize: 17, color: "#1e293b" }}>{year}年 {monthNames[month]}</span>
+            <button onClick={() => setCalMonth(m => { const d = new Date(m.year, m.month + 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })} style={{ background: "#f1f5f9", border: "none", color: "#475569", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 600 }}>▶</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, marginBottom: 4 }}>
-            {["日","一","二","三","四","五","六"].map(d => <div key={d} style={{ textAlign: "center", fontSize: 11, color: "#475569", padding: "4px 0" }}>{d}</div>)}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, marginBottom: 6 }}>
+            {["日","一","二","三","四","五","六"].map(d => <div key={d} style={{ textAlign: "center", fontSize: 11, color: "#94a3b8", padding: "4px 0", fontWeight: 600 }}>{d}</div>)}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
             {Array.from({ length: firstDay }, (_, i) => <div key={`b${i}`} />)}
             {Array.from({ length: days }, (_, i) => i + 1).map(day => {
               const data = txByDay[day]; const isSel = selectedDay === day;
               return (
-                <div key={day} onClick={() => setSelectedDay(isSel ? null : day)} style={{ background: isSel ? "#818cf833" : "#0f1629", borderRadius: 8, padding: "4px 2px", textAlign: "center", cursor: "pointer", border: isSel ? "1px solid #818cf8" : "1px solid #1e293b", minHeight: 44 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: isSel ? "#818cf8" : "#e2e8f0" }}>{day}</div>
-                  {data && <>{data.income > 0 && <div style={{ fontSize: 9, color: "#34d399" }}>+{data.income.toFixed(0)}</div>}{data.expense > 0 && <div style={{ fontSize: 9, color: "#f97316" }}>-{data.expense.toFixed(0)}</div>}</>}
+                <div key={day} onClick={() => setSelectedDay(isSel ? null : day)}
+                  style={{ background: isSel ? "#6366f1" : "#fff", borderRadius: 10, padding: "5px 2px", textAlign: "center", cursor: "pointer", border: "1.5px solid", borderColor: isSel ? "#6366f1" : "#e2e8f0", minHeight: 46 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: isSel ? "#fff" : "#1e293b" }}>{day}</div>
+                  {data && <>
+                    {data.income > 0 && <div style={{ fontSize: 9, color: isSel ? "#bbf7d0" : "#16a34a", lineHeight: 1.3 }}>+{data.income.toFixed(0)}</div>}
+                    {data.expense > 0 && <div style={{ fontSize: 9, color: isSel ? "#fecaca" : "#dc2626", lineHeight: 1.3 }}>-{data.expense.toFixed(0)}</div>}
+                  </>}
                 </div>
               );
             })}
@@ -453,11 +479,14 @@ export default function App() {
             {txByDay[selectedDay].txs.map(tx => {
               const cat = getCat(tx.category);
               return (
-                <div key={tx.id} style={{ ...S.card, marginBottom: 8, display: "flex", gap: 10, alignItems: "center" }}>
+                <div key={tx.id} style={{ ...S.card, marginBottom: 8, display: "flex", gap: 12, alignItems: "center" }}>
                   <div style={S.iconBox(cat.color)}>{cat.icon}</div>
-                  <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 600 }}>{tx.note || cat.label}</div><div style={S.sm}>{getAcc(tx.account).icon} {getAcc(tx.account).label}</div></div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{tx.note || cat.label}</div>
+                    <div style={S.sm}>{getAcc(tx.account).icon} {getAcc(tx.account).label}</div>
+                  </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontWeight: 700, color: tx.type === "income" ? "#34d399" : "#f97316" }}>{tx.type === "income" ? "+" : "-"}{fmt(tx.amount, tx.currency)}</div>
+                    <div style={{ fontWeight: 700, color: tx.type === "income" ? "#16a34a" : "#dc2626" }}>{tx.type === "income" ? "+" : "-"}{fmt(tx.amount, tx.currency)}</div>
                     {tx.currency !== baseCurrency && <div style={S.sm}>≈ {fmtBase(toBase(tx.amount, tx.currency))}</div>}
                   </div>
                 </div>
@@ -469,13 +498,14 @@ export default function App() {
     );
   };
 
+  // ── Settings ────────────────────────────────────────────────────────────────
   const Settings = () => (
     <div style={{ padding: "16px", paddingBottom: 100 }}>
       <div style={S.label}>基准货币</div>
       <div style={{ ...S.card, marginBottom: 16 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {CURRENCIES.map(c => (
-            <button key={c.code} onClick={() => setBaseCurrency(c.code)} style={{ background: baseCurrency === c.code ? "#818cf833" : "#1e293b", border: baseCurrency === c.code ? "1px solid #818cf8" : "1px solid #334155", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: baseCurrency === c.code ? "#818cf8" : "#e2e8f0", fontSize: 13, fontWeight: 600 }}>
+            <button key={c.code} onClick={() => setBaseCurrency(c.code)} style={{ background: baseCurrency === c.code ? "#6366f1" : "#f8fafc", border: "1.5px solid", borderColor: baseCurrency === c.code ? "#6366f1" : "#e2e8f0", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: baseCurrency === c.code ? "#fff" : "#475569", fontSize: 13, fontWeight: 600 }}>
               {c.flag} {c.code}
             </button>
           ))}
@@ -484,36 +514,36 @@ export default function App() {
 
       <div style={S.label}>实时汇率（相对 {baseCurrency}）</div>
       <div style={{ ...S.card, marginBottom: 16 }}>
-        <div style={{ ...S.sm, marginBottom: 8, color: ratesUpdated ? "#34d399" : "#f59e0b" }}>
+        <div style={{ fontSize: 12, marginBottom: 10, color: ratesUpdated ? "#16a34a" : "#f59e0b", fontWeight: 600 }}>
           {ratesUpdated ? `✅ ${rateSource} · ${ratesUpdated.toLocaleString("zh-CN")}` : "⏳ 获取中..."}
         </div>
         {CURRENCIES.filter(c => c.code !== baseCurrency).map(c => (
-          <div key={c.code} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #1e293b" }}>
-            <span style={{ fontSize: 13 }}>{c.flag} {c.code} · {c.name}</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#818cf8" }}>{fromBase(1, c.code).toFixed(["JPY","IDR"].includes(c.code) ? 1 : 4)}</span>
+          <div key={c.code} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
+            <span style={{ fontSize: 13, color: "#334155" }}>{c.flag} {c.code} · {c.name}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#6366f1" }}>{fromBase(1, c.code).toFixed(["JPY","IDR"].includes(c.code) ? 1 : 4)}</span>
           </div>
         ))}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <div style={S.label}>定期账单</div>
-        <button onClick={openAddRecurring} style={{ background: "#818cf822", border: "1px solid #818cf8", color: "#818cf8", borderRadius: 8, padding: "4px 12px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>+ 添加</button>
+        <button onClick={openAddRecurring} style={{ background: "#6366f1", border: "none", color: "#fff", borderRadius: 8, padding: "5px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>+ 添加</button>
       </div>
       <div style={{ marginBottom: 16 }}>
-        {recurringRules.length === 0 && <div style={{ ...S.sm, textAlign: "center", padding: 20, background: "#0f1629", borderRadius: 16, border: "1px solid #1e293b" }}>还没有定期账单，点击「+ 添加」新建</div>}
+        {recurringRules.length === 0 && <div style={{ ...S.card, textAlign: "center", color: "#94a3b8", padding: 20, fontSize: 13 }}>还没有定期账单，点击「+ 添加」新建</div>}
         {recurringRules.map(r => (
-          <div key={r.id} style={{ ...S.card, marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
+          <div key={r.id} style={{ ...S.card, marginBottom: 8, display: "flex", alignItems: "center", gap: 12 }}>
             <div style={S.iconBox(getCat(r.category).color)}>{getCat(r.category).icon}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{r.label}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#1e293b" }}>{r.label}</div>
               <div style={S.sm}>每月 {r.day} 日 · {getAcc(r.account).icon} {getAcc(r.account).label}</div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ color: "#f97316", fontWeight: 700, fontSize: 14 }}>-{fmt(r.amount, r.currency)}</div>
-              <div style={{ display: "flex", gap: 4, marginTop: 4, justifyContent: "flex-end" }}>
-                <button onClick={() => applyRecurring(r)} style={{ background: "#34d39922", border: "none", color: "#34d399", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11 }}>记入</button>
-                <button onClick={() => openEditRecurring(r)} style={{ background: "#1e293b", border: "none", color: "#818cf8", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11 }}>编辑</button>
-                <button onClick={() => deleteRecurring(r.id)} style={{ background: "#1e293b", border: "none", color: "#f87171", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11 }}>删除</button>
+              <div style={{ color: "#dc2626", fontWeight: 700, fontSize: 14 }}>-{fmt(r.amount, r.currency)}</div>
+              <div style={{ display: "flex", gap: 4, marginTop: 6, justifyContent: "flex-end" }}>
+                <button onClick={() => applyRecurring(r)} style={{ background: "#f0fdf4", border: "none", color: "#16a34a", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>记入</button>
+                <button onClick={() => openEditRecurring(r)} style={{ background: "#f1f5f9", border: "none", color: "#6366f1", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>编辑</button>
+                <button onClick={() => deleteRecurring(r.id)} style={{ background: "#fef2f2", border: "none", color: "#ef4444", borderRadius: 6, padding: "3px 8px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>删除</button>
               </div>
             </div>
           </div>
@@ -528,28 +558,29 @@ export default function App() {
           const blob = new Blob(["\uFEFF" + headers + rows], { type: "text/csv;charset=utf-8;" });
           const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "记账数据.csv"; a.click();
           showToast("导出成功 ✓");
-        }} style={S.btn("#34d399")}>📥 导出 CSV</button>
+        }} style={S.btn("#22c55e")}>📥 导出 CSV</button>
       </div>
     </div>
   );
 
+  // ── Modals ──────────────────────────────────────────────────────────────────
   const AddModal = () => {
     const converted = form.amount && !isNaN(parseFloat(form.amount)) && form.currency !== baseCurrency ? toBase(parseFloat(form.amount), form.currency) : null;
     return (
       <div style={S.modal} onClick={e => { if (e.target === e.currentTarget) { setShowAddModal(false); setEditTx(null); } }}>
         <div style={S.modalContent}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>{editTx ? "编辑记录" : "添加记录"}</div>
-            <button onClick={() => { setShowAddModal(false); setEditTx(null); }} style={{ background: "none", border: "none", color: "#64748b", fontSize: 22, cursor: "pointer" }}>×</button>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 18, color: "#1e293b" }}>{editTx ? "编辑记录" : "添加记录"}</div>
+            <button onClick={() => { setShowAddModal(false); setEditTx(null); }} style={{ background: "#f1f5f9", border: "none", color: "#64748b", fontSize: 18, cursor: "pointer", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
           </div>
-          <div style={{ display: "flex", background: "#1e293b", borderRadius: 10, padding: 3, marginBottom: 14 }}>
+          <div style={{ display: "flex", background: "#f1f5f9", borderRadius: 12, padding: 4, marginBottom: 16 }}>
             {["expense","income"].map(t => (
-              <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ flex: 1, background: form.type === t ? (t === "expense" ? "#f97316" : "#22c55e") : "none", border: "none", borderRadius: 8, padding: "8px 0", color: form.type === t ? "#fff" : "#64748b", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+              <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ flex: 1, background: form.type === t ? (t === "expense" ? "#dc2626" : "#16a34a") : "none", border: "none", borderRadius: 9, padding: "9px 0", color: form.type === t ? "#fff" : "#64748b", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
                 {t === "expense" ? "💸 支出" : "💰 收入"}
               </button>
             ))}
           </div>
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 14 }}>
             <div style={S.label}>金额</div>
             <div style={{ display: "flex", gap: 8 }}>
               <select style={{ ...S.select, width: 110, flexShrink: 0 }} value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}>
@@ -557,37 +588,37 @@ export default function App() {
               </select>
               <input style={S.input} type="number" step="0.01" min="0" placeholder="0.00" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} />
             </div>
-            {converted !== null && <div style={{ ...S.sm, marginTop: 6, color: "#818cf8" }}>≈ {fmtBase(converted)} {baseCurrency}（自动换算）</div>}
+            {converted !== null && <div style={{ fontSize: 12, marginTop: 6, color: "#6366f1", fontWeight: 600 }}>≈ {fmtBase(converted)} {baseCurrency}（自动换算）</div>}
           </div>
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 14 }}>
             <div style={S.label}>日期</div>
             <input style={S.input} type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
           </div>
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 14 }}>
             <div style={S.label}>分类</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {CATEGORIES.map(cat => (
-                <button key={cat.id} onClick={() => setForm(f => ({ ...f, category: cat.id }))} style={{ background: form.category === cat.id ? cat.color + "33" : "#1e293b", border: form.category === cat.id ? `1.5px solid ${cat.color}` : "1px solid #334155", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: form.category === cat.id ? cat.color : "#94a3b8", fontSize: 13 }}>
+                <button key={cat.id} onClick={() => setForm(f => ({ ...f, category: cat.id }))} style={{ background: form.category === cat.id ? cat.color + "20" : "#f8fafc", border: "1.5px solid", borderColor: form.category === cat.id ? cat.color : "#e2e8f0", borderRadius: 10, padding: "6px 12px", cursor: "pointer", color: form.category === cat.id ? cat.color : "#64748b", fontSize: 13, fontWeight: form.category === cat.id ? 600 : 400 }}>
                   {cat.icon} {cat.label}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 14 }}>
             <div style={S.label}>账户</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {ACCOUNTS.map(acc => (
-                <button key={acc.id} onClick={() => setForm(f => ({ ...f, account: acc.id }))} style={{ background: form.account === acc.id ? "#818cf833" : "#1e293b", border: form.account === acc.id ? "1.5px solid #818cf8" : "1px solid #334155", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: form.account === acc.id ? "#818cf8" : "#94a3b8", fontSize: 13 }}>
+                <button key={acc.id} onClick={() => setForm(f => ({ ...f, account: acc.id }))} style={{ background: form.account === acc.id ? "#6366f120" : "#f8fafc", border: "1.5px solid", borderColor: form.account === acc.id ? "#6366f1" : "#e2e8f0", borderRadius: 10, padding: "6px 12px", cursor: "pointer", color: form.account === acc.id ? "#6366f1" : "#64748b", fontSize: 13, fontWeight: form.account === acc.id ? 600 : 400 }}>
                   {acc.icon} {acc.label}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 20 }}>
             <div style={S.label}>备注</div>
             <input style={S.input} placeholder="备注（可选）" value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} />
           </div>
-          <button onClick={saveTx} style={S.btn(form.type === "expense" ? "#f97316" : "#22c55e")}>{editTx ? "保存修改" : "添加记录"}</button>
+          <button onClick={saveTx} style={S.btn(form.type === "expense" ? "#dc2626" : "#16a34a")}>{editTx ? "保存修改" : "添加记录"}</button>
         </div>
       </div>
     );
@@ -596,17 +627,17 @@ export default function App() {
   const BudgetModal = () => (
     <div style={S.modal} onClick={e => { if (e.target === e.currentTarget) setShowBudgetModal(false); }}>
       <div style={S.modalContent}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>设置月度预算</div>
-          <button onClick={() => setShowBudgetModal(false)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 22, cursor: "pointer" }}>×</button>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 18, color: "#1e293b" }}>设置月度预算</div>
+          <button onClick={() => setShowBudgetModal(false)} style={{ background: "#f1f5f9", border: "none", color: "#64748b", fontSize: 18, cursor: "pointer", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         </div>
         {CATEGORIES.filter(c => !["salary","investment"].includes(c.id)).map(cat => (
           <div key={cat.id} style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, marginBottom: 4 }}>{cat.icon} {cat.label}</div>
+            <div style={{ fontSize: 13, marginBottom: 4, color: "#475569" }}>{cat.icon} {cat.label}</div>
             <input style={S.input} type="number" placeholder="不设预算" value={budgets[cat.id] || ""} onChange={e => setBudgets(b => ({ ...b, [cat.id]: parseFloat(e.target.value) || 0 }))} />
           </div>
         ))}
-        <button onClick={() => { setShowBudgetModal(false); showToast("预算已保存 ✓"); }} style={S.btn()}>保存预算</button>
+        <button onClick={() => { setShowBudgetModal(false); showToast("预算已保存 ✓"); }} style={{ ...S.btn(), marginTop: 8 }}>保存预算</button>
       </div>
     </div>
   );
@@ -614,15 +645,15 @@ export default function App() {
   const RecurringModal = () => (
     <div style={S.modal} onClick={e => { if (e.target === e.currentTarget) setShowRecurringModal(false); }}>
       <div style={S.modalContent}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{editRecurring ? "编辑定期账单" : "添加定期账单"}</div>
-          <button onClick={() => setShowRecurringModal(false)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 22, cursor: "pointer" }}>×</button>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ fontWeight: 700, fontSize: 18, color: "#1e293b" }}>{editRecurring ? "编辑定期账单" : "添加定期账单"}</div>
+          <button onClick={() => setShowRecurringModal(false)} style={{ background: "#f1f5f9", border: "none", color: "#64748b", fontSize: 18, cursor: "pointer", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={S.label}>名称</div>
           <input style={S.input} placeholder="例如：房租、Netflix、手机费..." value={recurringForm.label} onChange={e => setRecurringForm(f => ({ ...f, label: e.target.value }))} />
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={S.label}>金额</div>
           <div style={{ display: "flex", gap: 8 }}>
             <select style={{ ...S.select, width: 110, flexShrink: 0 }} value={recurringForm.currency} onChange={e => setRecurringForm(f => ({ ...f, currency: e.target.value }))}>
@@ -631,27 +662,27 @@ export default function App() {
             <input style={S.input} type="number" step="0.01" min="0" placeholder="0.00" value={recurringForm.amount} onChange={e => setRecurringForm(f => ({ ...f, amount: e.target.value }))} />
           </div>
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={S.label}>每月扣款日</div>
           <select style={S.select} value={recurringForm.day} onChange={e => setRecurringForm(f => ({ ...f, day: parseInt(e.target.value) }))}>
             {Array.from({ length: 28 }, (_, i) => i + 1).map(d => <option key={d} value={d}>每月 {d} 日</option>)}
           </select>
         </div>
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={S.label}>分类</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {CATEGORIES.map(cat => (
-              <button key={cat.id} onClick={() => setRecurringForm(f => ({ ...f, category: cat.id }))} style={{ background: recurringForm.category === cat.id ? cat.color + "33" : "#1e293b", border: recurringForm.category === cat.id ? `1.5px solid ${cat.color}` : "1px solid #334155", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: recurringForm.category === cat.id ? cat.color : "#94a3b8", fontSize: 13 }}>
+              <button key={cat.id} onClick={() => setRecurringForm(f => ({ ...f, category: cat.id }))} style={{ background: recurringForm.category === cat.id ? cat.color + "20" : "#f8fafc", border: "1.5px solid", borderColor: recurringForm.category === cat.id ? cat.color : "#e2e8f0", borderRadius: 10, padding: "6px 12px", cursor: "pointer", color: recurringForm.category === cat.id ? cat.color : "#64748b", fontSize: 13, fontWeight: recurringForm.category === cat.id ? 600 : 400 }}>
                 {cat.icon} {cat.label}
               </button>
             ))}
           </div>
         </div>
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 20 }}>
           <div style={S.label}>账户</div>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {ACCOUNTS.map(acc => (
-              <button key={acc.id} onClick={() => setRecurringForm(f => ({ ...f, account: acc.id }))} style={{ background: recurringForm.account === acc.id ? "#818cf833" : "#1e293b", border: recurringForm.account === acc.id ? "1.5px solid #818cf8" : "1px solid #334155", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: recurringForm.account === acc.id ? "#818cf8" : "#94a3b8", fontSize: 13 }}>
+              <button key={acc.id} onClick={() => setRecurringForm(f => ({ ...f, account: acc.id }))} style={{ background: recurringForm.account === acc.id ? "#6366f120" : "#f8fafc", border: "1.5px solid", borderColor: recurringForm.account === acc.id ? "#6366f1" : "#e2e8f0", borderRadius: 10, padding: "6px 12px", cursor: "pointer", color: recurringForm.account === acc.id ? "#6366f1" : "#64748b", fontSize: 13, fontWeight: recurringForm.account === acc.id ? 600 : 400 }}>
                 {acc.icon} {acc.label}
               </button>
             ))}
@@ -662,6 +693,7 @@ export default function App() {
     </div>
   );
 
+  // ── Nav ─────────────────────────────────────────────────────────────────────
   const NAV = [
     { id: "dashboard", icon: "📊", label: "总览" },
     { id: "records",   icon: "📋", label: "记录" },
@@ -676,7 +708,7 @@ export default function App() {
         <div style={S.headerTop}>
           <div style={S.logo}>💱 MoneyFlow</div>
           <button onClick={() => { setShowAddModal(true); setEditTx(null); setForm({ amount: "", currency: "SGD", category: "food", account: "cash", date: new Date().toISOString().slice(0, 10), note: "", type: "expense" }); }}
-            style={{ background: "linear-gradient(135deg, #818cf8, #34d399)", border: "none", color: "#fff", borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
+            style={{ background: "#6366f1", border: "none", color: "#fff", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontWeight: 700, fontSize: 13 }}>
             + 记账
           </button>
         </div>
