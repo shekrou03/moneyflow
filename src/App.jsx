@@ -18,7 +18,7 @@ const CATEGORIES = [
   { id: "transport",     icon: "🚌", label: "交通",   color: "#3b82f6" },
   { id: "shopping",      icon: "🛍️", label: "购物",   color: "#ec4899" },
   { id: "entertainment", icon: "🎮", label: "娱乐",   color: "#8b5cf6" },
-  { id: "health",        icon: "💊", label: "医疗",   color: "#ef4444" },
+  { id: "health",        icon: "❤", label: "医疗",   color: "#ef4444" },
   { id: "housing",       icon: "🏠", label: "住房",   color: "#14b8a6" },
   { id: "utilities",     icon: "💡", label: "水电",   color: "#f59e0b" },
   { id: "education",     icon: "📚", label: "教育",   color: "#6366f1" },
@@ -31,9 +31,8 @@ const ACCOUNTS = [
   { id: "cash",   icon: "💵", label: "现金" },
   { id: "debit",  icon: "💳", label: "储蓄卡" },
   { id: "credit", icon: "🏦", label: "信用卡" },
-  { id: "alipay", icon: "🔵", label: "支付宝" },
-  { id: "wechat", icon: "🟢", label: "微信支付" },
   { id: "paynow", icon: "🟣", label: "PayNow" },
+  { id: "duitnow", icon: "🔵", label: "DuitNow" },
 ];
 
 const FALLBACK_RATES = {
